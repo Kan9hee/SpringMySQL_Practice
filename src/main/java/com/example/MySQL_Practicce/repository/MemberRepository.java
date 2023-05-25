@@ -59,6 +59,27 @@ public class MemberRepository {
         }
     }
 
+    public void update(String memberId, int money) throws SQLException {
+        String sql = "update member set money=? where member_id=?";
+
+        Connection con = null;
+        PreparedStatement preparedStatement = null;
+
+        try{
+            con=getConnection();
+            preparedStatement = con.prepareStatement(sql);
+            preparedStatement.setInt(1,money);
+            preparedStatement.setString(2,memberId);
+            int resultSize = preparedStatement.executeUpdate();
+            log.info("resultSize={}",resultSize);
+        }catch (SQLException e){
+            log.error("db error",e);
+            throw e;
+        }finally {
+            close(con,preparedStatement,null);
+        }
+    }
+
     private void close(Connection con, Statement state, ResultSet res){
 
         if(res!=null){
