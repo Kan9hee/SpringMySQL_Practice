@@ -5,6 +5,7 @@ import com.example.MySQL_Practicce.domain.Member;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
+import java.util.NoSuchElementException;
 
 @Slf4j
 public class MemberRepository {
@@ -27,6 +28,34 @@ public class MemberRepository {
             throw e;
         }finally {
             close(con,preparedStatement,null);
+        }
+    }
+
+    public Member findById(String memberId) throws SQLException {
+        String sql = "select * from member where member_id = ?";
+
+        Connection con=null;
+        PreparedStatement preparedStatement=null;
+        ResultSet rs=null;
+
+        try{
+            con=getConnection();
+            preparedStatement=con.prepareStatement(sql);
+            preparedStatement.setString(1,memberId);
+            rs = preparedStatement.executeQuery();
+            if(rs.next()){
+                Member member = new Member();
+                member.setMemberId(rs.getString("member_id"));
+                member.setMoney(rs.getInt("money"));
+                return member;
+            } else {
+                throw new NoSuchElementException("member not found memberId="+memberId);
+            }
+        }catch (SQLException e){
+            log.error("db error",e);
+            throw e;
+        }finally {
+            close(con,preparedStatement,rs);
         }
     }
 
