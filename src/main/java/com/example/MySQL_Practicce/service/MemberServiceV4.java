@@ -5,8 +5,7 @@ import com.example.MySQL_Practicce.repository.MemberRepositoryV4;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -15,20 +14,23 @@ import java.sql.SQLException;
 @RequiredArgsConstructor
 public class MemberServiceV4 {
 
-    private final PlatformTransactionManager transactionManager;
+    //private final PlatformTransactionManager transactionManager;
+    private final TransactionTemplate template;
     private final MemberRepositoryV4 memberRepository;
 
+    public MemberServiceV4(PlatformTransactionManager transactionManager, MemberRepositoryV4 memberRepository){
+        this.template = new TransactionTemplate(transactionManager);
+        this.memberRepository = memberRepository;
+    }
+
     public void accountTransfer(String fromId,String toId,int money) throws SQLException {
-
-        TransactionStatus status = transactionManager.getTransaction(new DefaultTransactionDefinition());
-
-        try{
-            logic(fromId, toId, money);
-            transactionManager.commit(status); //success
-        }catch(Exception e){
-            transactionManager.rollback(status); //fail
-            throw new IllegalStateException(e);
-        }
+        template.executeWithoutResult((status) ->{
+            try {
+                logic(fromId, toId, money);
+            } catch (SQLException e) {
+                throw new IllegalStateException(e);
+            }
+        });
     }
 
     private void logic(String fromId, String toId, int money) throws SQLException {
